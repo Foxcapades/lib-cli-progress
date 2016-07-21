@@ -1,0 +1,50 @@
+group 'io.vulpine.util'
+apply plugin: 'java'
+
+// Load Project Properties
+class config {
+  static int major = 0;
+  static int minor = 0;
+  static int patch = 0;
+  static int build = 0;
+  static double java = 1.8;
+}
+
+def propsFile = new File("project.properties");
+if (!propsFile.canRead()) throw new GradleException("Could not read properties.");
+
+def props = new Properties();
+props.load(new FileInputStream(propsFile));
+
+config.major = Integer.parseInt(props.getProperty('major'));
+config.minor = Integer.parseInt(props.getProperty('minor'));
+config.patch = Integer.parseInt(props.getProperty('patch'));
+config.build = Integer.parseInt(props.getProperty('build'));
+
+// Increment Build
+config.build += 1;
+props.setProperty('build', Integer.toString(config.build));
+props.store(new FileOutputStream(propsFile), null)
+
+// Set Gradle Properties
+version "${config.major}.${config.minor}.${config.patch}b${config.build}"
+sourceCompatibility = config.java
+
+task wrapper(type: Wrapper) {
+  gradleVersion = '2.14'
+  distributionUrl = "https://services.gradle.org/distributions/gradle-$gradleVersion-all.zip"
+}
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+}
+
+jar {
+  manifest {}
+  from {
+    configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+  }
+}
