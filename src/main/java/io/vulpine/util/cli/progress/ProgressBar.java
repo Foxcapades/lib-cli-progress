@@ -1,28 +1,28 @@
-package io.vulpine.progress;
+package io.vulpine.util.cli.progress;
 
+import java.util.Arrays;
 import java.util.function.Supplier;
 
-import static java.util.Arrays.fill;
-
-public class Bar
+public class ProgressBar
 {
-  protected final static char    glyph      = '=';
-  protected final static char    opening    = '[';
-  protected final static char    closing    = ']';
-  protected final static int     width      = 80;
-  protected volatile     boolean isComplete = false;
+  protected final static char opening = '[';
+  protected final static char closing = ']';
+
+  protected static char    glyph       = '=';
+  protected static int     width       = 80;
+
+  protected volatile boolean isComplete = false;
 
   protected final String header;
 
   protected final Supplier < Integer > maxValueCall;
   protected final Supplier < Integer > curValueCall;
-  protected final String               reset;
   protected final Supplier < Boolean > isCompleteCall;
   protected final Supplier < String >  statusCall;
 
   protected String status = "";
 
-  public Bar (
+  public ProgressBar(
     final String header,
     final Supplier < Integer > curValueCall,
     final Supplier < Integer > maxValueCall,
@@ -30,18 +30,14 @@ public class Bar
     final Supplier < String > statusCall
   )
   {
-    final char[] res = new char[width];
     this.header = header;
     this.curValueCall = curValueCall;
     this.maxValueCall = maxValueCall;
     this.isCompleteCall = isCompleteCall;
     this.statusCall = statusCall;
-    this.reset = new String(res);
-
-    fill(res, '\b');
   }
 
-  public Bar (
+  public ProgressBar(
     final Supplier < Integer > c,
     final Supplier < Integer > m,
     final Supplier < Boolean > d,
@@ -49,6 +45,16 @@ public class Bar
   )
   {
     this("", c, m, d, s);
+  }
+
+  public static void setGlyph( final char glyph )
+  {
+    ProgressBar.glyph = glyph;
+  }
+
+  public static void setWidth( final int width )
+  {
+    ProgressBar.width = width;
   }
 
   public synchronized boolean isComplete ()
@@ -75,7 +81,7 @@ public class Bar
 
     done = isComplete();
 
-    sb = new StringBuilder();
+    sb  = new StringBuilder();
     max = maxValueCall.get();
     cur = done ? max : curValueCall.get();
 
@@ -87,8 +93,8 @@ public class Bar
 
     bar = new char[barWidth];
 
-    fill(bar, ' ');
-    if (fill > 1) fill(bar, 1, fill+1, glyph);
+    Arrays.fill(bar, ' ');
+    if (fill > 1) Arrays.fill(bar, 1, fill+1, glyph);
 
     bar[0] = opening;
     bar[barWidth - 1] = closing;
@@ -100,23 +106,23 @@ public class Bar
       .toString();
   }
 
-  public static int calcBarWidth ( final int max, final int width )
+  protected static int calcBarWidth ( final int max, final int width )
   {
     return width - (String.valueOf(max).length() * 2 + 4);
   }
 
-  public static int calcFillWidth ( final double cur, final double max, final double width )
+  protected static int calcFillWidth ( final double cur, final double max, final double width )
   {
     return (int) Math.ceil(cur / max * width);
   }
 
-  public void printReset ()
+  protected void printReset ()
   {
     System.out.print("\033[3A");
     System.out.print("\033[2k");
   }
 
-  public void printUpdate ()
+  protected void printUpdate ()
   {
     System.out.print(buildUpdate());
   }
